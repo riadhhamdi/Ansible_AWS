@@ -1,0 +1,9 @@
+---
+- name: Playbook to unconfigure IPA servers
+  hosts: 35.178.25.8
+  become: true
+  vars:
+    ansible_user: ocpuser
+  roles:
+  - role: ipaserver
+    state: absent

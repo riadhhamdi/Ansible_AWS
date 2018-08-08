@@ -1,0 +1,26 @@
+- name: register machine to disable all repo and enable needed repo
+  hosts: localhost
+  become: true
+  vars:
+    rhn_username: remplir
+    rhn_password: remplir
+    #rhn_activation_key: remplir
+  tasks:
+    - name: attach the host
+      redhat_subscription:
+        state: present
+        username: "{{rhn_username}}"
+        #activationkey: "{{rhn_activation_key}}"
+        password: "{{rhn_password}}"
+        pool_ids: 8a85f98c61b28d040161c82cd2cd20b3
+    - name: Disable all repositories except rhel7 extra and cephs
+      shell: "{{ item }}"                                                                                                   
+      with_items:                                                                                                           
+        - subscription-manager repos --disable='*'                                                                          
+        - >                                                                                                                 
+          subscription-manager repos                                                                                        
+          --enable="rhel-7-server-rpms"                                                                                     
+          --enable="rhel-7-server-extras-rpms"                                                                              
+          --enable="rhel-7-server-rhceph-3-mon-rpms"      
+          --enable="rhel-7-server-rhceph-3-osd-rpms"      
+          --enable="rhel-7-server-rhceph-3-tools-rpms"      

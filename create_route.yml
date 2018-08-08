@@ -1,0 +1,22 @@
+- hosts: localhost 
+  vars_files: 
+    - secrets.yml
+  tasks: 
+  - name: show a message
+    debug:
+      msg: "Hello"
+  - name: create a dns record 
+    route53:
+      aws_access_key: "{{aws_access_key}}" 
+      aws_secret_key: "{{aws_secret_key}}"
+      state: present
+      zone: "{{zone}}"
+      record: "{{record}}"
+      type: A
+      ttl: 7200
+      value:
+        - "{{ip}}"
+      overwrite: yes 
+      wait: yes 
+    when: record != "startx.fr"
+

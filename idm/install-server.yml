@@ -1,0 +1,63 @@
+- name: Playbook to configure server before installing IPA server
+  hosts: all 
+  vars: 
+    ipaserver_setup_dns: no
+    user_hostname: "{{hostname}}.{{client_name}}.{{ipaserver_domain}}"  
+  become: true
+  tasks:
+  - name: set hostname
+    hostname:
+      name: "{{user_hostname}}"
+  - name: install firewalld
+    yum:
+      name: firewalld
+      state: present
+  - name: enable and start firewalld
+    systemd: 
+      state: started
+      enabled: yes
+      name: firewalld
+  - name: configure etchosts
+    lineinfile:
+      insertafter: EOF
+      line: "{{ansible_default_ipv4.address}} {{user_hostname}}"
+      path: /etc/hosts
+
+- name: Playbook to install IPA servers
+  hosts: all
+  vars:
+    ipadm_password: "{{ipaadmin_password}}"
+    ipaserver_setup_dns: no
+    user_hostname: "{{hostname}}.{{client_name}}.{{ipaserver_domain}}"
+  become: true
+  roles:
+  - role: ipaserver
+    state: present
+
+- name: Create the DNS record 
+  hosts: all
+  vars:
+    user_hostname: "{{hostname}}.{{client_name}}.{{ipaserver_domain}}"
+  vars_files:
+    - secrets.yml
+  tasks:
+  - name: show a message
+    debug:
+      msg: "Hello"
+  - name: create a dns record
+    route53:
+      aws_access_key: "{{aws_access_key}}"
+      aws_secret_key: "{{aws_secret_key}}"
+      state: present
+      zone: "{{zone}}"
+      record: "{{user_hostname}}"
+      type: A
+      ttl: 7200
+      value:
+        - "{{ansible_ssh_host}}"
+      overwrite: yes
+      wait: yes
+    when: user_hostname != "startx.fr"
+    delegate_to: localhost
+    no_log: yes 
+

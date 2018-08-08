@@ -1,0 +1,23 @@
+<network>
+  <name>{{ libvirt_net.name }}</name>
+  <forward mode="nat"/>
+  <bridge name="{{ libvirt_net.bridge }}" stp="on" delay="0"/>
+  <domain name="{{libvirt_net.domain }}"/>
+  <dns>
+    <forwarder addr="8.8.8.8"/>
+    <forwarder addr="8.8.4.4"/>
+    {% for vm in libvirt_vms %}
+    <host ip="{{ vm.ipaddr }}">
+      <hostname>{{ vm.name }}.{{ libvirt_net.domain }}</hostname>
+    </host>
+    {% endfor %}
+  </dns>
+  <ip address="{{ libvirt_net.ipaddr }}" netmask="{{ libvirt_net.netmask }}">
+    <dhcp>
+      <range start="{{ libvirt_net.dhcp_start }}" end="{{ libvirt_net.dhcp_end }}"/>
+      {% for vm in libvirt_vms %}
+      <host mac="{{ vm.macaddr }}" name="{{ vm.name }}.{{ libvirt_net.domain }}" ip="{{ vm.ipaddr }}"/>
+      {% endfor %}
+    </dhcp>
+  </ip>
+</network>

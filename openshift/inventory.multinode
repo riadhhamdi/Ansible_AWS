@@ -1,0 +1,17 @@
+localhost
+
+[OSEv3:children]
+masters
+etcd
+nodes
+
+[masters]
+master ansible_host=10.10.10.1
+
+[etcd]
+master ansible_host=10.10.10.1
+
+[nodes]
+master ansible_host=10.10.10.1
+node1  ansible_host=10.10.10.11
+node2  ansible_host=10.10.10.12

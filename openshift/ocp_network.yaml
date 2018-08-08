@@ -1,0 +1,34 @@
+- name: Create the OCP network with libvirt
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  become: yes
+  vars_files:
+    - vars/libvirt_net.yaml
+    - vars/libvirt_vms.yaml
+  vars:
+    recreate: False
+  tasks:
+  - block:
+    - name: Stop the network
+      virt_net:
+        name: ocp
+        command: destroy
+    - name: Delete the network
+      virt_net:
+        name: ocp
+        command: undefine
+    when: recreate
+  - name: Create the network
+    virt_net:
+      name: ocp
+      command: define
+      xml: '{{ lookup("template", "networks/ocp.xml.j2") }}'
+  - name: Start the network
+    virt_net:
+      name: ocp
+      state: active
+  - name: Set the network as autostart
+    virt_net:
+      name: ocp
+      autostart: yes

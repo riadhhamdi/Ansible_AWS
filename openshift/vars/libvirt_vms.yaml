@@ -1,0 +1,16 @@
+libvirt_vms:
+  - name: master
+    macaddr: '52:54:00:00:11:01'
+    ipaddr: '10.10.10.1'
+    memory_mb: 8192
+    vcpus: 4
+  - name: node1
+    macaddr: '52:54:00:00:11:11'
+    ipaddr: '10.10.10.11'
+    memory_mb: 8192
+    vcpus: 4
+  - name: node2
+    macaddr: '52:54:00:00:11:12'
+    ipaddr: '10.10.10.12'
+    memory_mb: 8192
+    vcpus: 4

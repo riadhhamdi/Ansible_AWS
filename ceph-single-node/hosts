@@ -1,0 +1,11 @@
+[mons]
+localhost ansible_connexion=local
+
+[mgrs]
+localhost ansible_connexion=local
+
+[clients]
+localhost ansible_connexion=local
+
+[osds]
+localhost ansible_connexion=local

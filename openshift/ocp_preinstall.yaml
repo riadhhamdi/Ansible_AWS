@@ -1,0 +1,98 @@
+- name: Prepare the hosts before OCP installation
+  hosts:
+    - masters
+    - nodes
+  become: yes
+  vars_files:
+    - vars/subs_account.yaml
+    - vars/ssh_key_ocp_deploy.yaml
+  vars:
+    not_in_cloud: True
+    clean_repos_first: True
+  tasks:
+  - name: Remove unneeded packages
+    yum:
+      name:
+        - rh-amazon-rhui-client
+        - yum-rhn-plugin
+        - rhn-client-tools
+        - rhnlib
+      state: absent
+
+  - name: Register the system to Red Hat
+    redhat_subscription:
+      state: present
+      username: "{{ subs_username }}"
+      password: "{{ subs_password }}"
+      pool_ids: 8a85f98b635f3e6d0164186581b3664a
+
+  - when: clean_repos_first
+    block:
+    - name: Disable all RHSM repos
+      command: subscription-manager repos --disable=*
+
+  - name: Enable the needed repos for OpenShift
+    command: subscription-manager repos --enable={{item}}
+    with_items:
+      - rhel-7-server-rpms
+      - rhel-7-server-extras-rpms
+      - rhel-7-server-ose-3.9-rpms
+      - rhel-7-fast-datapath-rpms
+      - rhel-7-server-ansible-2.4-rpms
+
+  ##################################################
+  ###           ONLY WITH ANSIBLE 2.5+           ###
+  ##################################################
+  #- when: clean_repos_first
+  #  block:
+  #  - name: Disable all RHSM repos
+  #    rhsm_repository:
+  #      name: '*'
+  #      state: disabled
+  #
+  #- name: Enable the needed repos for OpenShift
+  #  rhsm_repository:
+  #    name: "{{ item }}"
+  #    state: enabled
+  #  with_items:
+  #    - rhel-7-server-rpms
+  #    - rhel-7-server-extras-rpms
+  #    - rhel-7-server-ose-3.9-rpms
+  #    - rhel-7-fast-datapath-rpms
+  #    - rhel-7-server-ansible-2.4-rpms
+  ##################################################
+
+  - when: not_in_cloud
+    block:
+    - block:
+      - local_action: command id -un
+        register: local_user
+      - local_action: command id -gn
+        register: local_group
+      - local_action: command ls -d ~
+        register: local_home
+      become: no
+
+    - name: Create the .ssh directory
+      file:
+        path: "{{ local_home.stdout }}/.ssh"
+        state: directory
+        mode: 0700
+        owner: "{{ local_user.stdout }}"
+        group: "{{ local_group.stdout }}"
+      delegate_to: localhost
+
+    - name: Copy ssh private key to localhost
+      copy:
+        content: "{{ ssh_privatekey }}"
+        dest: "{{ local_home.stdout }}/.ssh/ocp_deploy"
+        mode: 0600
+        owner: "{{ local_user.stdout }}"
+        group: "{{ local_group.stdout }}"
+        force: yes
+      delegate_to: localhost
+
+    - name: Deploy ssh public key to all nodes
+      authorized_key:
+        user: root
+        key: "{{ lookup('file','files/ocp_deploy.pub') }}"

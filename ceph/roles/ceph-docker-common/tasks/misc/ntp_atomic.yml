@@ -1,0 +1,6 @@
+---
+- name: start the ntp service
+  service:
+    name: chronyd
+    enabled: yes
+    state: started

@@ -1,0 +1,20 @@
+- name: playbook preparation
+  hosts: localhost
+  remote_user: ocpuser 
+  tasks:
+  - name: add host to group 'just_created' with variable foo=42
+    add_host:
+      name: "{{item}}"
+      groups: mons
+    with_items:
+      - host1
+      - host2
+      - host3
+  
+- import_playbook: imported.yml  
+- hosts: just_created
+  tasks:
+  - name: show a message 
+    debug:
+      msg: "Hello"
+ 

@@ -1,0 +1,23 @@
+- hosts: localhost
+  vars: 
+    single_node: ip-172-31-33-138.eu-west-2.compute.internal
+  tasks:
+  - name: Prepare the mon group in the inventory
+    add_host:
+      name: "{{item}}"
+      groups: mons
+    with_items: 
+      - "{{ single_node }}"
+  - name: Prepare the osds group in the inventory
+    add_host:
+      name: "{{item}}"
+      groups: osds
+    with_items: 
+      - "{{ single_node }}"
+  - name: Prepare the mgrs group in the inventory
+    add_host:
+      name: "{{item}}"
+      groups: mgrs
+    with_items: 
+      - "{{ single_node }}"
+- import_playbook: site.yml 

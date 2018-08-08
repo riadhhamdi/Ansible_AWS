@@ -1,0 +1,24 @@
+- name: Create the OCP infra w/ 1 master and 2 nodes
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  become: yes
+  vars_files:
+    - vars/libvirt_net.yaml
+    - vars/libvirt_vms.yaml
+    - vars/libvirt_pool.yaml
+  vars:
+    recreate: False
+  tasks:
+  - name: Get the facts for the libvirt storage pools
+    virt_pool:
+      command: facts
+
+  - name: Isolate the path of the {{ libvirt_pool }} storage pool
+    set_fact:
+      pool_path: "{{ ansible_libvirt_pools[libvirt_pool].path }}"
+
+  - include_tasks: tasks/vm.yaml
+    with_items: "{{ libvirt_vms }}"
+    loop_control:
+      loop_var: vm

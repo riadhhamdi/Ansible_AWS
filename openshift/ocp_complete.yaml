@@ -1,0 +1,2 @@
+- import_playbook: ocp_network.yaml
+- import_playbook: ocp_vms.yaml

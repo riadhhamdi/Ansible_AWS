@@ -1,0 +1,50 @@
+- block:
+  - name: Stop the VM {{ vm.name }}
+    virt:
+      name: "{{ vm.name }}"
+      state: destroyed
+
+  - name: Delete the VM {{ vm.name }}
+    virt:
+      name: "{{ vm.name }}"
+      command: undefine
+  - name: Delete the disks of the VM {{ vm.name }}
+    file:
+      path: "{{ item }}"
+      state: absent
+    with_items:
+      - "{{ pool_path }}/{{ vm.name }}_vda.qcow2"
+      - "{{ pool_path }}/{{ vm.name }}_vdb.qcow2"
+  always:
+  - name: Refresh the storage pool
+    command: "virsh pool-refresh {{ libvirt_pool }}"
+  when: recreate
+
+
+- name: Create the vda disk for the VM {{ vm.name }}
+  copy:
+    remote_src: yes
+    src:  "{{ pool_path }}/_base.qcow2"
+    dest: "{{ pool_path }}/{{ vm.name }}_vda.qcow2"
+    owner: root
+    group: root
+    mode: 0640
+  register: vda_disk
+
+- name: Create the vdb disk for the VM {{ vm.name }}
+  command: "qemu-img create -q -f qcow2 {{ vm.name }}_vdb.qcow2 50G"
+  args:
+    chdir: "{{ pool_path }}"
+    creates: "{{ pool_path }}/{{ vm.name }}_vdb.qcow2"
+  register: vdb_disk
+
+- name: Refresh the storage pool
+  command: "virsh pool-refresh {{ libvirt_pool }}"
+  when: vda_disk.changed or
+        vdb_disk.changed
+
+- name: Create the VM {{ vm.name }}
+  virt:
+    name: "{{ vm.name }}"
+    command: define
+    xml: '{{ lookup("template", "vms/vm.xml.j2") }}'

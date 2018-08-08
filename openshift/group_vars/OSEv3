@@ -1,0 +1,15 @@
+openshift_deployment_type: openshift-enterprise
+openshift_release: v3.9
+
+openshift_master_identity_providers:
+- name: htpasswd_auth
+  login: true
+  challenge: true
+  kind: HTPasswdPasswordIdentityProvider
+  filename: /etc/origin/master/htpasswd
+openshift_master_htpasswd_users:
+  admin: $apr1$4ZbKL26l$3eKL/6AQM8O94lRwTAu611
+  developer: $apr1$4ZbKL26l$3eKL/6AQM8O94lRwTAu611
+
+openshift_disable_check: disk_availability,docker_storage,memory_availability,docker_image_availability
+ansible_user: root

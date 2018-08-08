@@ -1,0 +1,6 @@
+- name: imported play
+  hosts: just_created 
+  tasks:
+  - name: just a dummy task
+    debug:
+      msg: "Hosts"
